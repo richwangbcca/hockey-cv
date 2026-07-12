@@ -2,7 +2,7 @@
 
 ## Problem
 
-The NHL does not expose raw player coordinate data. You can watch a game, but
+The NHL does not expose raw player coordinate data. You can get so much data from NHL EDGE, but
 you can't get the (x, y) positions of players on the ice.
 
 ## Proposed solution
