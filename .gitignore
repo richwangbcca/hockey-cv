@@ -13,6 +13,11 @@ env/
 
 # Media / data (large, regenerable)
 *.mp4
-frames/
-pool/
-labels/
+/frames/
+/pool/
+/broadcasts/
+/labels/
+/datasets/
+/pilot/
+/videos/
+/benchmarking/frames/
