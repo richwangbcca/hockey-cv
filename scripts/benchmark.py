@@ -1,50 +1,19 @@
-"""
-Homography de-risk harness
-Testing harness to ensure that homography is possible at a reasonable rate.
+"""Collect legacy point labels and evaluate homography leave-one-out error.
 
 Two modes:
-  python bench.py collect  <image_dir> <label_dir>   # click rink landmarks per frame
-  python bench.py evaluate <label_dir>               # leave-one-out reprojection error (feet)
+  python -m scripts.benchmark collect  <image_dir> <label_dir>
+  python -m scripts.benchmark evaluate <label_dir>
 
 Coordinate system: NHL rink, CENTER-ICE ORIGIN, units = FEET.
   x = length  in [-100, 100]   (goal lines at +/-89, blue lines at +/-25)
-  y = width   in [-42.5, 42.5] (centerline at 0)
+  y = width   in [-42.5, 42.5] (rink center across its width at 0)
 This matches the convention used by NHL/analytics tracking data.
 """
 import os, sys, json, glob
 import numpy as np
 import cv2
 
-# --- Rink landmarks (verified against NHL spec). Naming convention: ---
-#   feature_END_SIDE   END: E = +x end (x>0), W = -x end (x<0)
-#                      SIDE: N = +y (one side), S = -y (other side)
-LANDMARKS = {
-    "center": (0.0, 0.0),
-    # blue lines meet the straight side boards (E line at +25, W at -25)
-    "blue_E_N": ( 25.0,  42.5), "blue_E_S": ( 25.0, -42.5),
-    "blue_W_N": (-25.0,  42.5), "blue_W_S": (-25.0, -42.5),
-    # neutral-zone faceoff dots: 5 ft from blue line, 22 off center
-    "dotNZ_E_N": ( 20.0,  22.0), "dotNZ_E_S": ( 20.0, -22.0),
-    "dotNZ_W_N": (-20.0,  22.0), "dotNZ_W_S": (-20.0, -22.0),
-    # end-zone faceoff dots: 20 ft from goal line, 22 off center
-    "dotEZ_E_N": ( 69.0,  22.0), "dotEZ_E_S": ( 69.0, -22.0),
-    "dotEZ_W_N": (-69.0,  22.0), "dotEZ_W_S": (-69.0, -22.0),
-    # goal post BASES only (on goal line, 3 off center).
-    # WARNING: never click the crossbar or net top -- those sit 48" off the ice
-    # and are NOT on the z=0 plane; using them corrupts the homography.
-    "post_E_N": ( 89.0,  3.0), "post_E_S": ( 89.0, -3.0),
-    "post_W_N": (-89.0,  3.0), "post_W_S": (-89.0, -3.0),
-    # trapezoid corners ON the goal line (11 off center)
-    "trapGL_E_N": ( 89.0,  11.0), "trapGL_E_S": ( 89.0, -11.0),
-    "trapGL_W_N": (-89.0,  11.0), "trapGL_W_S": (-89.0, -11.0),
-    # trapezoid corners AT the end boards (14 off center)
-    "trapEB_E_N": ( 100.0,  14.0), "trapEB_E_S": ( 100.0, -14.0),
-    "trapEB_W_N": (-100.0,  14.0), "trapEB_W_S": (-100.0, -14.0),
-    # goal line meets the (curved) corner boards. At x=+/-89 the boards are on the
-    # 28 ft corner arc centered at (+/-72, +/-14.5): y = 14.5 + sqrt(28^2 - 17^2) = 36.75.
-    "goalBrd_E_N": ( 89.0,  36.75), "goalBrd_E_S": ( 89.0, -36.75),
-    "goalBrd_W_N": (-89.0,  36.75), "goalBrd_W_S": (-89.0, -36.75),
-}
+from vision.rink import LANDMARKS
 
 def loo_feet_errors(img_pts, rink_pts):
     """Leave-one-out: fit image->rink homography on all-but-one clicked point,
