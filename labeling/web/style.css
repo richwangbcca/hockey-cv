@@ -1,0 +1,425 @@
+/* Layout and visual states for the offline hockey-image labeling interface. */
+:root {
+    color-scheme: dark;
+    font-family: system-ui, sans-serif;
+    background: #13191e;
+    color: #e6edf3;
+    font-size: 14px
+}
+
+* {
+    box-sizing: border-box
+}
+
+body {
+    margin: 0
+}
+
+header {
+    display: flex;
+    gap: 28px;
+    align-items: center;
+    padding: 14px 20px;
+    background: #1c2832
+}
+
+header strong {
+    font-size: 18px
+}
+
+#saveState {
+    margin-left: auto;
+    color: #9bdfbf
+}
+
+nav,
+.toolbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px
+}
+
+nav {
+    border-bottom: 1px solid #35424d
+}
+
+button,
+select,
+input,
+textarea {
+    font: inherit;
+    color: inherit;
+    background: #26343f;
+    border: 1px solid #526271;
+    border-radius: 4px;
+    padding: 6px
+}
+
+button {
+    cursor: pointer
+}
+
+button:hover {
+    background: #3b5365
+}
+
+button:disabled {
+    opacity: .5;
+    cursor: wait
+}
+
+input[type=checkbox] {
+    width: auto
+}
+
+#frame {
+    max-width: 280px
+}
+
+#search {
+    width: 160px
+}
+
+main {
+    display: grid;
+    grid-template-columns: minmax(500px, 1fr) 370px;
+    height: calc(100vh - 115px)
+}
+
+.workspace {
+    min-width: 0;
+    display: flex;
+    flex-direction: column
+}
+
+#viewport {
+    flex: 1;
+    min-height: 350px;
+    overflow: hidden;
+    background: #090c10;
+    position: relative
+}
+
+#canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    touch-action: none
+}
+
+aside {
+    overflow-y: auto;
+    border-left: 1px solid #35424d;
+    padding: 0 15px 20px
+}
+
+aside section {
+    border-bottom: 1px solid #35424d;
+    padding: 12px 0
+}
+
+h2 {
+    font-size: 15px;
+    margin: 0 0 10px
+}
+
+aside label {
+    display: block;
+    margin: 8px 0
+}
+
+aside label>select,
+aside label>input:not([type=checkbox]),
+textarea {
+    display: block;
+    width: 100%;
+    margin-top: 4px
+}
+
+.hint {
+    font-size: 12px;
+    color: #a9bac8;
+    line-height: 1.5;
+    margin: 8px 10px
+}
+
+#errors {
+    color: #ffb5a9;
+    padding: 0 12px;
+    white-space: pre-wrap
+}
+
+#imageInfo {
+    font-size: 12px;
+    color: #b2c2cf;
+    overflow-wrap: anywhere
+}
+
+#rink {
+    max-width: 100%;
+    background: #e5edf0;
+    border-radius: 4px;
+    cursor: crosshair
+}
+
+pre {
+    font-size: 11px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere
+}
+
+.item {
+    padding: 7px;
+    margin: 4px 0;
+    border: 1px solid #3d505e;
+    border-radius: 4px;
+    cursor: pointer
+}
+
+.item.selected {
+    border-color: #ffe573;
+    background: #34444d
+}
+
+.item button {
+    font-size: 12px;
+    margin: 3px
+}
+
+#proposals:empty::after {
+    content: 'No pending proposals';
+    color: #a9bac8
+}
+
+#annotations:empty::after {
+    content: 'No annotations';
+    color: #a9bac8
+}
+
+@media(max-width:900px) {
+    main {
+        grid-template-columns: 1fr;
+        height: auto
+    }
+
+    #viewport {
+        height: 60vh;
+        flex: none
+    }
+
+    aside {
+        border-left: 0
+    }
+
+    nav {
+        gap: 4px
+    }
+}
+
+#playerRink {
+    max-width: 100%;
+    background: #e5edf0;
+    border-radius: 4px
+}
+
+[hidden] {
+    display: none !important
+}
+
+body {
+    height: 100vh;
+    display: flex;
+    flex-direction: column
+}
+
+main {
+    height: auto;
+    flex: 1;
+    min-height: 0;
+    grid-template-columns: minmax(450px, 1fr) 365px
+}
+
+header {
+    padding: 12px 20px
+}
+
+.phases {
+    padding: 10px 20px;
+    gap: 10px;
+    background: #18232b
+}
+
+.phases button {
+    flex: 1;
+    padding: 11px 14px;
+    background: transparent;
+    border-color: #40515e;
+    color: #b8c8d3
+}
+
+.phases button[aria-current=step] {
+    background: #234f45;
+    border-color: #7fd1b2;
+    color: #e6fff3
+}
+
+.phase-guide {
+    padding: 12px 20px;
+    background: #1b2931;
+    border-bottom: 1px solid #35424d
+}
+
+.phase-guide strong {
+    font-size: 17px
+}
+
+.phase-guide p {
+    margin: 5px 0 0;
+    color: #c2d0da;
+    line-height: 1.5;
+    max-width: 1100px
+}
+
+aside {
+    padding: 0 18px 24px
+}
+
+aside section {
+    padding: 16px 0
+}
+
+aside label {
+    margin: 12px 0
+}
+
+aside .hint {
+    margin: 8px 0
+}
+
+h2 {
+    font-size: 16px
+}
+
+details {
+    margin: 12px 0;
+    color: #bdcdd7
+}
+
+summary {
+    cursor: pointer;
+    font-size: 13px;
+    padding: 7px 0;
+    color: #d9e7ed
+}
+
+details[open]>summary {
+    margin-bottom: 8px
+}
+
+details details {
+    padding-left: 10px;
+    border-left: 2px solid #354b58
+}
+
+.metadata {
+    padding: 8px 0
+}
+
+.primary {
+    width: 100%;
+    padding: 12px;
+    background: #28654f;
+    border-color: #7ac5a5;
+    color: #fff;
+    font-weight: 600
+}
+
+.primary:hover {
+    background: #337d62
+}
+
+.completion {
+    position: sticky;
+    bottom: 0;
+    background: #13191e;
+    border-top: 1px solid #40515e
+}
+
+.binary-choice {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 18px 0
+}
+
+.binary-choice button {
+    padding: 18px;
+    font-size: 18px;
+    font-weight: 650
+}
+
+.binary-choice .usable {
+    background: #245f4a;
+    border-color: #70caa4
+}
+
+.binary-choice .unusable {
+    background: #55383c;
+    border-color: #bc7b82
+}
+
+.binary-choice button.selected {
+    outline: 3px solid #fff;
+    outline-offset: 2px
+}
+
+#phaseStatus {
+    font-size: 13px;
+    color: #a8d9c4
+}
+
+#calibration {
+    line-height: 1.6
+}
+
+#viewport {
+    min-height: 220px
+}
+
+#annotationPanel .item {
+    line-height: 1.5
+}
+
+#landmarkHelp {
+    color: #c1dccc
+}
+
+@media(max-width:900px) {
+    body {
+        height: auto;
+        min-height: 100vh
+    }
+
+    main {
+        grid-template-columns: 1fr
+    }
+
+    .phases {
+        display: grid;
+        grid-template-columns: 1fr 1fr
+    }
+
+    .phase-guide {
+        padding: 12px
+    }
+
+    #viewport {
+        height: 55vh
+    }
+
+    .completion {
+        position: static
+    }
+}

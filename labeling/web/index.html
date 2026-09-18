@@ -1,0 +1,183 @@
+<!doctype html>
+<!-- Offline labeling interface served by labeling.app for hockey image annotation. -->
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Ice frame labeling</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+    <header><strong>Ice frame labeling</strong><span id="progress"></span><span id="saveState"
+            role="status">Loading…</span></header>
+    <nav class="phases" aria-label="Labeling phases">
+        <button data-phase="shots">1 · Choose usable frames</button><button data-phase="geometry">2 · Mark
+            landmarks</button>
+        <button data-phase="calibration">3 · Check rink fit</button><button data-phase="players">4 · Mark
+            players</button>
+    </nav>
+    <select id="mode" hidden aria-label="Phase">
+        <option value="shots">Shots</option>
+        <option value="geometry">Landmarks</option>
+        <option value="calibration">Rink fit</option>
+        <option value="players">Players</option>
+    </select>
+    <div class="phase-guide"><strong id="phaseTitle"></strong>
+        <p id="phaseInstructions"></p>
+    </div>
+    <nav aria-label="Frames"><button id="prev">← Previous</button><button id="next">Skip for now →</button>
+        <input id="search" placeholder="Find filename" aria-label="Find filename"><select id="frame"
+            aria-label="Frame"></select>
+        <label><input id="unreviewed" type="checkbox">Unfinished in this phase</label>
+        <label><input id="geometryPilot" type="checkbox" checked>Geometry pilot (150)</label>
+        <button id="save">Save draft</button><button id="undo">Undo</button>
+    </nav>
+    <main>
+        <section class="workspace">
+            <div class="toolbar"><label id="toolControl">Action <select id="tool"></select></label>
+                <button id="finish">Finish line / area (Enter)</button><button id="fitView">Fit image</button>
+                <button id="newAnnotation">Add another landmark</button>
+                <label id="proposalToggle"><input type="checkbox" id="showProposals" checked>Show suggestions</label>
+            </div>
+            <div id="viewport"><canvas id="canvas" aria-label="Image annotation canvas"></canvas></div>
+            <p class="hint" id="canvasHint"></p>
+            <div id="errors" role="alert"></div>
+        </section>
+        <aside>
+            <section id="shotPanel">
+                <h2>Can this frame support rink positions?</h2>
+                <div class="binary-choice"><button id="markUsable" class="usable">Usable</button><button
+                        id="markUnusable" class="unusable">Unusable</button></div>
+                <p><strong>Usable:</strong> the camera shows enough rink context to place at least some visible on-ice
+                    people in rink coordinates.</p>
+                <p><strong>Unusable:</strong> a close-up, bench, crowd, ad, transition, or ice view without enough rink
+                    context.</p>
+                <p class="hint">Ignore players outside the frame. Either button saves, completes this phase, and
+                    advances immediately.</p>
+            </section>
+            <section id="geometryPanel">
+                <h2>Choose a visible landmark</h2>
+                <p class="hint">Start with faceoff dots and clear line/board intersections. Choose a named point below,
+                    then click its center in the image. Mark only what you can see.</p>
+                <canvas id="rink" width="330" height="165" aria-label="Rink landmark picker"></canvas>
+                <label>Point on the rink<select id="landmark"></select></label>
+                <p id="landmarkHelp" class="hint"></p>
+                <details id="extraGeometry">
+                    <summary>Optional: lines, arcs, and areas to ignore</summary>
+                    <p class="hint">A line or arc is an open trace along visible paint. An ignore area is a closed
+                        boundary around a graphic or bench region. These are optional; the rink fit currently uses named
+                        points.</p>
+                    <label>Feature type<select id="featureType"></select></label>
+                    <button id="traceLine">Trace a line / arc</button><button id="ignoreArea">Outline an area to
+                        ignore</button>
+                    <label>Visibility<select id="visibility"></select></label><button id="addUnseen">Record an unseen
+                        named point</button>
+                    <p class="hint">Unseen points have no coordinates. You can usually just leave them unmarked.</p>
+                </details>
+            </section>
+            <section id="calibrationPanel">
+                <h2>Does the rink fit the image?</h2>
+                <p class="hint">Use at least four named points to fit the rink. Optionally reserve an extra point for
+                    checking: it measures error without influencing the fit. Four suitable fit points plus visual
+                    inspection are enough to accept.</p>
+                <label><input id="heldOut" type="checkbox">Reserve selected point for checking</label>
+                <label>How are the rink axes defined?<select id="orientation">
+                        <option value="unknown">Not established yet</option>
+                        <option value="sequence_local">Consistent within this camera sequence</option>
+                        <option value="rink_fixed">Known fixed rink orientation</option>
+                    </select></label>
+                <p class="hint">E/W and N/S follow the rink diagram, not the screen. Describe your convention in the
+                    optional notes below.</p>
+                <button id="fitGeometry">Calculate rink fit</button>
+                <pre id="calibration"></pre>
+                <label>Result of your check<select id="geometryStatus"></select></label>
+                <p class="hint">Choose Accepted only after inspecting the green rink-paint overlay and errors. The
+                    orange dashed outline is the fit's support boundary, not an on-ice marking. You can finish with
+                    Insufficient or Ambiguous.</p>
+            </section>
+            <section id="playerPanel">
+                <h2>Box each visible on-ice person</h2>
+                <p class="hint">Drag a box around the visible person. Choose their role, then add a skate-contact point
+                    if you can see it.</p>
+                <label>Role<select id="role">
+                        <option>skater</option>
+                        <option>goalie</option>
+                        <option>official</option>
+                        <option>unknown</option>
+                    </select></label>
+                <label>Team<select id="team">
+                        <option value="unknown">Unknown</option>
+                        <option value="team_a">team_a</option>
+                        <option value="team_b">team_b</option>
+                        <option value="official">Official</option>
+                    </select></label>
+                <p class="hint">Keep team_a and team_b consistent throughout each broadcast, including goalies.
+                    Suggested convention: team_a = lighter jerseys; team_b = darker jerseys.</p>
+                <label>Can you locate the skate contact?<select id="contactVisibility">
+                        <option value="hidden">Hidden — leave the point empty</option>
+                        <option value="both">Both skates visible</option>
+                        <option value="one">One skate visible</option>
+                        <option value="estimated">Estimated</option>
+                        <option value="uncertain">Uncertain</option>
+                    </select></label>
+                <button id="placeContact">Place selected person's ice point</button>
+                <p class="hint">Click midway between the visible skate contacts. A box bottom is not a reliable ice
+                    point.</p>
+                <details>
+                    <summary>Occlusion and other options</summary>
+                    <label><input id="occluded" type="checkbox">Partly hidden behind something</label><label><input
+                            id="truncated" type="checkbox">Cut off by the image edge</label>
+                    <button id="clearContact">Clear selected ice point</button><button id="ignorePlayers">Outline an
+                        area to ignore</button>
+                </details>
+                <details>
+                    <summary>Preview derived rink positions</summary>
+                    <canvas id="playerRink" width="330" height="165"
+                        aria-label="Derived player positions on rink"></canvas>
+                    <p id="playerRinkStatus" class="hint"></p>
+                </details>
+            </section>
+            <section id="annotationPanel">
+                <h2 id="annotationTitle">Marked landmarks</h2>
+                <div id="annotations"></div><button id="delete">Delete selected</button>
+            </section>
+            <section id="suggestionPanel">
+                <details>
+                    <summary id="suggestionSummary">Suggested landmarks to check</summary>
+                    <p class="hint">These came from earlier labels or a detector. Confirm the name and location before
+                        accepting each one.</p>
+                    <button id="proposeCenter">Suggest center-ice dots</button><button id="proposeGeneral">Suggest paint
+                        lines</button>
+                    <div id="proposals"></div>
+                </details>
+            </section>
+            <section id="completionPanel" class="completion">
+                <p id="phaseStatus"></p><button id="completeNext" class="primary">Done →</button>
+                <p id="completionFeedback" role="status" aria-live="polite"></p>
+                <p class="hint" id="completionHelp"></p>
+            </section>
+            <details class="metadata">
+                <summary>Optional notes & frame details</summary>
+                <div id="imageInfo"></div>
+                <label>Notes<textarea id="notes" rows="2"></textarea></label>
+                <details id="sequenceDetails">
+                    <summary>Sequence grouping for dataset splits</summary>
+                    <p class="hint">Leave these blank until continuity is known. They keep related footage in the same
+                        training/evaluation split.</p>
+                    <label>Continuous camera shot ID<input id="shotId" placeholder="Leave blank if unknown"></label>
+                    <label>Repeated action / replay group<input id="leakageGroup"
+                            placeholder="Leave blank if unknown"></label>
+                </details>
+                <details>
+                    <summary>Change completion status</summary>
+                    <div id="reviews"></div>
+                </details>
+            </details>
+        </aside>
+    </main>
+    <script src="/app.js"></script>
+</body>
+
+</html>
