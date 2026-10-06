@@ -11,10 +11,10 @@ from build_pilot import choose, descriptor
 from classify_pool import train_svm
 
 ROOT = Path(__file__).resolve().parents[2]
-OUT = ROOT / "pilot" / "output" / "transfer"
+OUT = ROOT / 'data' / 'pilot' / "output" / "transfer"
 SOURCES = {
-    "min_vs_sjs": ROOT / "broadcasts" / "min_vs_sjs" / "frames",
-    "tor_vs_tbl": ROOT / "broadcasts" / "tor_vs_tbl" / "frames",
+    "min_vs_sjs": ROOT / 'data' / 'broadcasts' / "min_vs_sjs" / "frames",
+    "tor_vs_tbl": ROOT / 'data' / 'broadcasts' / "tor_vs_tbl" / "frames",
 }
 
 
@@ -62,8 +62,8 @@ def render(source_id, records):
 
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
-    pilot = json.loads((ROOT / "pilot" / "output" / "pilot_labels.json").read_text())["records"]
-    train_x = np.float32([descriptor(cv2.imread(str(ROOT / "pool" / r["filename"]))) for r in pilot])
+    pilot = json.loads((ROOT / 'data' / 'pilot' / "output" / "pilot_labels.json").read_text())["records"]
+    train_x = np.float32([descriptor(cv2.imread(str(ROOT / 'data' / 'pool' / r["filename"]))) for r in pilot])
     y = np.int32([r["model_label"]["position_usability"] == "usable" for r in pilot])
     payload = {"schema_version": 1, "training_source": "broadcast_01", "training_frames": len(pilot), "sources": {}}
 

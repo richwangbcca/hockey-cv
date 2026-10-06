@@ -11,13 +11,23 @@ env/
 # macOS
 .DS_Store
 
-# Media / data (large, regenerable)
+# Media / data (large, regenerable or local)
 *.mp4
-/frames/
-/pool/
-/broadcasts/
-/labels/
-/datasets/
-/pilot/
-/videos/
-/benchmarking/frames/
+/data/frames/*
+!/data/frames/README.md
+/data/pool/*
+!/data/pool/README.md
+/data/broadcasts/*
+!/data/broadcasts/README.md
+/data/labels/*
+!/data/labels/README.md
+/data/datasets/*
+!/data/datasets/README.md
+/data/pilot/output/
+/data/pilot/manual_binary_review.json
+/data/pilot/transfer_review.json
+/data/videos/*
+!/data/videos/README.md
+/data/benchmarking/frames/
+/data/benchmarking/labels/
+/.secrets/

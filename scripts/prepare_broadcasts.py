@@ -20,7 +20,7 @@ def probe(path):
 
 
 def extract(video, source_id, interval):
-    destination = ROOT / "broadcasts" / source_id
+    destination = ROOT / "data" / "broadcasts" / source_id
     frames = destination / "frames"
     timing_path = destination / "timing.json"
     frames.mkdir(parents=True, exist_ok=True)

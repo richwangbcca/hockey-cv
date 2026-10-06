@@ -7,8 +7,8 @@ import cv2
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[2]
-POOL = ROOT / 'pool'
-OUT = ROOT / 'pilot' / 'output'
+POOL = ROOT / 'data' / 'pool'
+OUT = ROOT / 'data' / 'pilot' / 'output'
 
 SHORT = {
     'ice_action': 'ICE', 'person_closeup': 'CLOSEUP', 'bench_or_penalty_box': 'BENCH',

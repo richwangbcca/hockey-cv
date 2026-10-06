@@ -11,9 +11,9 @@ from build_pilot import descriptor
 from classify_new_broadcasts import SOURCES, ensemble
 
 ROOT = Path(__file__).resolve().parents[2]
-OUT = ROOT / "pilot" / "output" / "transfer"
+OUT = ROOT / 'data' / 'pilot' / "output" / "transfer"
 INITIAL = OUT / "predictions.json"
-REVIEW = ROOT / "pilot" / "transfer_review.json"
+REVIEW = ROOT / 'data' / 'pilot' / "transfer_review.json"
 SEED = 20260910
 
 
@@ -36,8 +36,8 @@ def render(source_id, records, prefix):
 def main():
     initial = json.loads(INITIAL.read_text())
     corrections = json.loads(REVIEW.read_text())["corrections"]
-    original = json.loads((ROOT / "pilot" / "output" / "pilot_labels.json").read_text())["records"]
-    train_x = [descriptor(cv2.imread(str(ROOT / "pool" / record["filename"]))) for record in original]
+    original = json.loads((ROOT / 'data' / 'pilot' / "output" / "pilot_labels.json").read_text())["records"]
+    train_x = [descriptor(cv2.imread(str(ROOT / 'data' / 'pool' / record["filename"]))) for record in original]
     train_y = [record["model_label"]["position_usability"] == "usable" for record in original]
     baseline = {}
 

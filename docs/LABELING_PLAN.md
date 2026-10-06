@@ -17,19 +17,19 @@ The offline labeling tool does not need to run at the eventual inference rate.
 
 ## Starting dataset
 
-- Start with `pool/`: 1,175 JPEGs from one broadcast, named between `f_0001.jpg`
+- Start with `data/pool/`: 1,175 JPEGs from one broadcast, named between `f_0001.jpg`
   and `f_1204.jpg`, with gaps. The inspected first image is 1920×1080. A 24-frame
   contact sheet shows center-ice and end-zone views, lower angles, close-ups,
   benches, and off-ice footage. Inventory all dimensions and classes before
   assuming the sample represents the full pool.
-- Preserve originals and import existing annotations from `benchmarking/label/`,
-  `labels/`, and any other discovered label folders after inspecting their schemas.
+- Preserve originals and import existing annotations from `data/benchmarking/label/`,
+  `data/labels/`, and any other discovered label folders after inspecting their schemas.
   Match by source image and dimensions; do not silently merge filename collisions
   or assume old labels have been reviewed under the new conventions.
 - Establish extraction provenance: source video, original frame index, and source
   timestamp where recoverable. A pool filename is an identifier, not proof of
   source timing. Missing timing remains explicitly unknown.
-- Use the seven original `frames/` images, especially 601, as regression examples.
+- Use the seven original `data/frames/` images, especially 601, as regression examples.
   Keep generated overlays out of the input dataset.
 - This broadcast is a development dataset. Coverage across other arenas,
   broadcasts, camera setups, and rink artwork requires additional data later.
@@ -122,7 +122,7 @@ Provide a single entry point, `labeling.app`, with the following proposed comman
 The interface can extend the existing Python/OpenCV/Matplotlib collector, with
 zoom, pan, undo, autosave, and resume; avoid building a large application initially.
 
-1. **`index pool/ --dataset datasets/ice_v1`**: inventory image hashes, dimensions,
+1. **`index data/pool/ --dataset data/datasets/ice_v1`**: inventory image hashes, dimensions,
    provenance, duplicates, and existing labels. Generate contact sheets and a
    manifest. Preserve source paths and originals.
 2. **`review-shots`**: rapidly tag every pool image, preferably in chronological

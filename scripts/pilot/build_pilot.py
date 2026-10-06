@@ -1,4 +1,4 @@
-"""Build a deterministic, diverse 100-frame scene-labeling pilot from pool/."""
+"""Build a deterministic, diverse 100-frame scene-labeling pilot from data/pool/."""
 from pathlib import Path
 import json
 
@@ -6,8 +6,8 @@ import cv2
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[2]
-POOL = ROOT / 'pool'
-OUT = ROOT / 'pilot' / 'output'
+POOL = ROOT / 'data' / 'pool'
+OUT = ROOT / 'data' / 'pilot' / 'output'
 SEED = 20260909
 
 

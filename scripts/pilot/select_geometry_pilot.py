@@ -12,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from build_pilot import descriptor
 from labeling.app import atomic_json
 
-DATASET = ROOT / "datasets" / "ice_v1"
+DATASET = ROOT / 'data' / 'datasets' / "ice_v1"
 OUT = DATASET / "selections"
 NAME = "geometry_pilot_v1"
 SOURCE_IDS = ("broadcast_01", "min_vs_sjs", "tor_vs_tbl")

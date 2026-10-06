@@ -10,9 +10,9 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 from labeling.app import Dataset
 
-DATASET = ROOT / "datasets" / "ice_v1"
-PREDICTIONS = ROOT / "pilot" / "output" / "transfer" / "retrained_predictions.json"
-REVIEW = ROOT / "pilot" / "transfer_review.json"
+DATASET = ROOT / 'data' / 'datasets' / "ice_v1"
+PREDICTIONS = ROOT / 'data' / 'pilot' / "output" / "transfer" / "retrained_predictions.json"
+REVIEW = ROOT / 'data' / 'pilot' / "transfer_review.json"
 SOURCE_IDS = ("min_vs_sjs", "tor_vs_tbl")
 
 

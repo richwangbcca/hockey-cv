@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from build_pilot import descriptor
 
 ROOT = Path(__file__).resolve().parents[2]
-OUT = ROOT / 'pilot' / 'output'
+OUT = ROOT / 'data' / 'pilot' / 'output'
 SEED = 20260909
 
 
@@ -40,8 +40,8 @@ def render(records, prefix):
 
 def main():
     pilot=json.loads((OUT/'pilot_labels.json').read_text())['records']
-    pool_paths=sorted((ROOT/'pool').glob('*.jpg'))
-    extra_paths=sorted((ROOT/'benchmarking'/'frames').glob('*.jpg'))
+    pool_paths=sorted((ROOT / 'data' / 'pool').glob('*.jpg'))
+    extra_paths=sorted((ROOT / 'data' / 'benchmarking'/'frames').glob('*.jpg'))
     paths=pool_paths+extra_paths
     cache=OUT/'broadcast_descriptors.npy'
     if cache.exists():
@@ -85,8 +85,8 @@ def main():
             review_reason='; '.join(reasons),in_pilot=path.name in pilot_names,
             manual_override=None,final_label=None))
 
-    pool_records=[r for r in records if r['relative_path'].startswith('pool/')]
-    extra_records=[r for r in records if r['relative_path'].startswith('benchmarking/')]
+    pool_records=[r for r in records if r['relative_path'].startswith('data/pool/')]
+    extra_records=[r for r in records if r['relative_path'].startswith('data/benchmarking/')]
     uncertain=[r for r in pool_records if r['review_reason'] and not r['in_pilot']]
     # Audit 20 confident examples per predicted class, spread across the file list.
     rng=np.random.default_rng(SEED);audit=[]

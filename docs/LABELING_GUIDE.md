@@ -7,7 +7,7 @@ It requires Python, NumPy, and OpenCV. The interface has no npm dependencies.
 ## Open the prepared dataset
 
 ```sh
-arch -x86_64 python3 -m labeling.app review-shots --dataset datasets/ice_v1
+arch -x86_64 python3 -m labeling.app review-shots --dataset data/datasets/ice_v1
 ```
 
 Open **http://127.0.0.1:8765**. The four phase buttons are independent passes:
@@ -54,10 +54,10 @@ Intel NumPy/OpenCV installation; use `python3` normally in a matching environmen
 
 The prepared manifest contains:
 
-- 1,175 images from `pool/` under source ID `broadcast_01`.
-- The other 29 broadcast images from `benchmarking/frames/`, with the same source
+- 1,175 images from `data/pool/` under source ID `broadcast_01`.
+- The other 29 broadcast images from `data/benchmarking/frames/`, with the same source
   ID. These filenames are absent from the pool; originals stay in their folders.
-- Seven original PNGs from `frames/`, under `regression_frames`, excluding overlays.
+- Seven original PNGs from `data/frames/`, under `regression_frames`, excluding overlays.
 - 239 timestamped frames from `MINvSJS.mp4`, sampled every 20 seconds under source
   ID `min_vs_sjs`.
 - 271 timestamped frames from `TORvTBL.mp4`, sampled every 20 seconds under source
@@ -68,7 +68,7 @@ The prepared manifest contains:
 The dataset now contains 1,721 images. All usability decisions have been reviewed;
 geometry and player labels remain separate later phases. Indexing alone does not
 claim that newly added images have been labeled. Dataset files
-are ignored by Git; back up `datasets/ice_v1/` separately along with source images.
+are ignored by Git; back up `data/datasets/ice_v1/` separately along with source images.
 Manifest image paths are absolute; reindex a relocated source with the same source
 ID and relative filenames to update paths without replacing annotations.
 
@@ -92,8 +92,12 @@ ID and relative filenames to update paths without replacing annotations.
    Finally click Save fit review. Insufficient or ambiguous views can
    still have reviewed image-space feature labels.
 4. **Label players.** Drag a box around a visible on-ice person and set their role.
+   Boxes may extend beyond the image for edge-truncated people; when no skate
+   point is available, export extrapolates from the box-bottom midpoint using the
+   accepted homography. Starting another person resets contact visibility to Both.
    Select the box in Annotations, set contact visibility, then select Player ice
-   point and click the skate-contact midpoint. Hidden contacts have no point;
+   point and click the skate-contact midpoint. The contact point may also be placed
+   beyond the image edge and extrapolated through the accepted homography. Hidden contacts have no point;
    uncertain or estimated contacts must be tagged accordingly. Set occlusion and
    truncation flags. Draw ignore polygons for ambiguous bench/graphic regions.
    Label officials separately. Mark player review `reviewed` only after checking
@@ -123,18 +127,18 @@ may serve multiple tabs; revision checks prevent stale tabs from overwriting eac
 other. Simultaneous independent server/CLI writers are not supported.
 
 ```sh
-python3 -m labeling.app index pool --dataset datasets/ice_v1 --source-id broadcast_01
-python3 -m labeling.app index benchmarking/frames --dataset datasets/ice_v1 --source-id broadcast_01
-python3 -m labeling.app index frames --dataset datasets/ice_v1 --source-id regression_frames
-python3 -m labeling.app index broadcasts/min_vs_sjs/frames --dataset datasets/ice_v1 --source-id min_vs_sjs --timestamps broadcasts/min_vs_sjs/timing.json
-python3 -m labeling.app index broadcasts/tor_vs_tbl/frames --dataset datasets/ice_v1 --source-id tor_vs_tbl --timestamps broadcasts/tor_vs_tbl/timing.json
+python3 -m labeling.app index data/pool --dataset data/datasets/ice_v1 --source-id broadcast_01
+python3 -m labeling.app index data/benchmarking/frames --dataset data/datasets/ice_v1 --source-id broadcast_01
+python3 -m labeling.app index data/frames --dataset data/datasets/ice_v1 --source-id regression_frames
+python3 -m labeling.app index data/broadcasts/min_vs_sjs/frames --dataset data/datasets/ice_v1 --source-id min_vs_sjs --timestamps data/broadcasts/min_vs_sjs/timing.json
+python3 -m labeling.app index data/broadcasts/tor_vs_tbl/frames --dataset data/datasets/ice_v1 --source-id tor_vs_tbl --timestamps data/broadcasts/tor_vs_tbl/timing.json
 
-python3 -m labeling.app import-legacy --dataset datasets/ice_v1 --labels benchmarking/label --images benchmarking/frames
-python3 -m labeling.app import-legacy --dataset datasets/ice_v1 --labels labels --images frames
-python3 -m labeling.app contact-sheet --dataset datasets/ice_v1 --out datasets/ice_v1/contact_sheets
-python3 -m labeling.app validate --dataset datasets/ice_v1
-python3 -m labeling.app export --dataset datasets/ice_v1 --out datasets/ice_v1/exports/draft_01
-python3 -m labeling.app sample --dataset datasets/ice_v1 --hz 2 4 --out datasets/ice_v1/samples.json
+python3 -m labeling.app import-legacy --dataset data/datasets/ice_v1 --labels data/benchmarking/label --images data/benchmarking/frames
+python3 -m labeling.app import-legacy --dataset data/datasets/ice_v1 --labels data/labels --images data/frames
+python3 -m labeling.app contact-sheet --dataset data/datasets/ice_v1 --out data/datasets/ice_v1/contact_sheets
+python3 -m labeling.app validate --dataset data/datasets/ice_v1
+python3 -m labeling.app export --dataset data/datasets/ice_v1 --out data/datasets/ice_v1/exports/draft_01
+python3 -m labeling.app sample --dataset data/datasets/ice_v1 --hz 2 4 --out data/datasets/ice_v1/samples.json
 ```
 
 `propose --dataset … --image-id <manifest ID> --method center` proposes neutral-zone
@@ -186,7 +190,7 @@ measure within-broadcast performance, not generalization to other broadcasts.
 
 ```sh
 python3 -m unittest discover -s tests -v
-node --check labeling/web/app.js
+node --check labeling/src/web/app.js
 ```
 
 `python3 tests/browser_fixture.py` creates a fresh disposable fixture and prints

@@ -3,7 +3,7 @@ from pathlib import Path
 import json
 
 ROOT = Path(__file__).resolve().parents[2]
-PATH = ROOT / 'pilot' / 'output' / 'pilot_labels.json'
+PATH = ROOT / 'data' / 'pilot' / 'output' / 'pilot_labels.json'
 
 PERSON = {4,5,13,20,21,31,37,38,39,51,60,63,72,78,79,84,94,99,100}
 BENCH = {14,43,44,52,80,90}

@@ -2,12 +2,12 @@
 Pull the frames you need to hand-click for a propagation drift test:
 frame 0 (the seed) plus N checkpoints spread evenly across the WHOLE clip.
 
-    python scripts/grab.py <video> [n_checkpoints=6]   ->  writes frames/<idx>.png
+    python scripts/grab.py <video> [n_checkpoints=6]   ->  writes data/frames/<idx>.png
 
 Then:
-    python -m scripts.benchmark collect frames labels    # click anchors on each
-    python -m vision.propagate run <video> labels/0.png.json --out overlay.mp4 \
-           150:labels/150.png.json 300:labels/300.png.json ...
+    python -m scripts.benchmark collect data/frames data/labels
+    python -m vision.propagate run <video> data/labels/0.png.json --out overlay.mp4 \
+           150:data/labels/150.png.json 300:data/labels/300.png.json ...
 Only these frames need clicking; the full video feeds vision.propagate directly.
 """
 import sys, os
@@ -26,7 +26,7 @@ if total <= 0:
 targets = sorted({0} | {round(total * i / n) for i in range(1, n + 1)})
 targets = [min(t, total - 1) for t in targets]
 
-os.makedirs("frames", exist_ok=True)
+os.makedirs("data/frames", exist_ok=True)
 want = set(targets)
 i = 0
 while want:
@@ -34,12 +34,12 @@ while want:
     if not ok:
         break
     if i in want:
-        cv2.imwrite(f"frames/{i}.png", fr)
-        print(f"wrote frames/{i}.png   (t = {i / fps:5.1f}s)")
+        cv2.imwrite(f"data/frames/{i}.png", fr)
+        print(f"wrote data/frames/{i}.png   (t = {i / fps:5.1f}s)")
         want.discard(i)
     i += 1
 cap.release()
 
 print(f"\nclip: {total} frames @ {fps:.2f} fps ({total/fps:.1f}s)")
-print(f"seed        = frames/{targets[0]}.png")
-print(f"checkpoints = " + " ".join(f"{t}:labels/{t}.png.json" for t in targets[1:]))
+print(f"seed        = data/frames/{targets[0]}.png")
+print(f"checkpoints = " + " ".join(f"{t}:data/labels/{t}.png.json" for t in targets[1:]))

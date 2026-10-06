@@ -37,7 +37,7 @@
     <main>
         <section class="workspace">
             <div class="toolbar"><label id="toolControl">Action <select id="tool"></select></label>
-                <button id="finish">Finish line / area (Enter)</button><button id="fitView">Fit image</button>
+                <button id="finish">Finish line / area (Enter)</button><button id="fitView">Re-center image</button>
                 <button id="newAnnotation">Add another landmark</button>
                 <label id="proposalToggle"><input type="checkbox" id="showProposals" checked>Show suggestions</label>
             </div>
@@ -99,8 +99,8 @@
             </section>
             <section id="playerPanel">
                 <h2>Box each visible on-ice person</h2>
-                <p class="hint">Drag a box around the visible person. Choose their role, then add a skate-contact point
-                    if you can see it.</p>
+                <p class="hint">Drag a box around the person, including beyond the image edge when their body is cut
+                    off. Choose their role, then add a skate-contact point if you can see it.</p>
                 <label>Role<select id="role">
                         <option>skater</option>
                         <option>goalie</option>
@@ -123,8 +123,9 @@
                         <option value="uncertain">Uncertain</option>
                     </select></label>
                 <button id="placeContact">Place selected person's ice point</button>
-                <p class="hint">Click midway between the visible skate contacts. A box bottom is not a reliable ice
-                    point.</p>
+                <p class="hint">Click midway between the visible skate contacts. You may pan and place the point
+                    beyond the image edge for a truncated player; the accepted homography extrapolates it. A box
+                    bottom is only a fallback estimate.</p>
                 <details>
                     <summary>Occlusion and other options</summary>
                     <label><input id="occluded" type="checkbox">Partly hidden behind something</label><label><input

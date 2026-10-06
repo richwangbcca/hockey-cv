@@ -1,6 +1,6 @@
 """Detect conservative center-ice geometry for labeling proposals and diagnostics.
 
-python -m vision.detect_center frames/601.png
+python -m vision.detect_center data/frames/601.png
 
 No clicked labels are read. E/W mean image-right/image-left, as in this shot's
 labels; this is not an automatic determination of the teams' attacking ends.

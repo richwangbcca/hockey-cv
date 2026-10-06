@@ -100,6 +100,36 @@ class DatasetTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'Invalid team'):
             self.dataset.save(record)
 
+    def test_off_image_player_box_exports_extrapolated_position(self):
+        record = self.observations()
+        record['players'] = [
+            dict(id='edge-box', role='skater', team='team_a',
+                bbox=[850, 350, 1100, 700], ice_point=None, contact_visibility='both',
+                provenance='manual', occluded=False, truncated=True),
+            dict(id='edge-point', role='skater', team='team_b',
+                bbox=[-100, 200, 100, 550], ice_point=[-50, 300], contact_visibility='one',
+                provenance='manual', occluded=False, truncated=True),
+        ]
+        record['review'] = dict(shot='unreviewed', landmarks='reviewed', geometry='unreviewed', players='reviewed')
+        self.dataset.save(record)
+        record = self.dataset.fit(self.key)
+        record['shot']['geometry_status'] = 'accepted'
+        record['review']['geometry'] = 'reviewed'
+        self.dataset.save(record)
+
+        destination = self.root / 'edge-export'
+        export_dataset(self.dataset, destination)
+        players = json.loads((destination / 'players.jsonl').read_text())['players']
+        self.assertIsNone(players[0]['ice_point'])
+        self.assertTrue(np.allclose(players[0]['rink_point_derived'], [95, -80]))
+        self.assertEqual(players[1]['ice_point'], [-50, 300])
+        self.assertTrue(np.allclose(players[1]['rink_point_derived'], [-110, 0]))
+
+        record = self.dataset.get(self.key)
+        record['players'][0]['bbox'] = [1100, 700, 1200, 800]
+        with self.assertRaisesRegex(ValueError, 'does not overlap'):
+            self.dataset.save(record)
+
     def test_acceptance_allows_four_points_without_holdout(self):
         record = self.observations()
         record['features'] = record['features'][:4]

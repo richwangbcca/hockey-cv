@@ -5,7 +5,7 @@ import json
 from collections import Counter
 
 ROOT = Path(__file__).resolve().parents[2]
-PATH = ROOT / 'pilot' / 'output' / 'review.csv'
+PATH = ROOT / 'data' / 'pilot' / 'output' / 'review.csv'
 FIELDS = ('content', 'camera_view', 'position_usability', 'temporal_context')
 
 

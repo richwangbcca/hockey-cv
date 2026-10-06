@@ -8,12 +8,15 @@ points remain easy to identify.
 - `grab.py` extracts checkpoints for propagation drift experiments.
 - `benchmark.py` collects legacy landmark clicks and scores homography error.
 - `pilot/` contains the scene-classification and dataset-population pilot tools.
-  Their reports, review files, and generated outputs remain in `../pilot/`.
+  Their reports, review files, and generated outputs live in `../data/pilot/`.
 
 Run these commands from the repository root, for example:
 
 ```sh
 python3 scripts/prepare_broadcasts.py --help
-python3 scripts/grab.py VIDEO.mp4
+python3 scripts/grab.py data/videos/clip.mp4
 python3 scripts/pilot/score_review.py
 ```
+
+Run these from the repository root. Scripts that operate on the working dataset
+use `data/datasets/ice_v1`; the pilot tools use `data/pilot/` for outputs.

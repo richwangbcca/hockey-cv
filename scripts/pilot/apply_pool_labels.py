@@ -10,11 +10,11 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 from labeling.app import Dataset
 
-OUT = ROOT / "pilot" / "output"
+OUT = ROOT / 'data' / 'pilot' / "output"
 PREDICTIONS = OUT / "pool_predictions.json"
 PILOT = OUT / "pilot_labels.json"
-MANUAL_REVIEW = ROOT / "pilot" / "manual_binary_review.json"
-DATASET = ROOT / "datasets" / "ice_v1"
+MANUAL_REVIEW = ROOT / 'data' / 'pilot' / "manual_binary_review.json"
+DATASET = ROOT / 'data' / 'datasets' / "ice_v1"
 
 
 def load_plan():

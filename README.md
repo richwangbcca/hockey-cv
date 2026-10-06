@@ -15,11 +15,18 @@ a homography that maps broadcast-camera space onto a real rink coordinate
 system. Player detections are then projected through that homography to recover
 their positions on the ice.
 
-## Current status
-A testing harness was made to estimate whether homography would even be possible.
-Players often times occlude on-ice landmarks, and a frame needs four landmarks to
-be able to translate broadcast-space to rink-space. The test seemed reasonable, and
-I am now building the actual homography computation engine.
+## Repository layout
+
+| Folder | Contents |
+| --- | --- |
+| [`data/`](data/README.md) | Source videos, image pools, annotations, and pilot outputs. Large local data is ignored by Git. |
+| [`labeling/`](labeling/README.md) | Local review server; implementation and browser assets live in `labeling/src/`. |
+| [`vision/`](vision/README.md) | Rink geometry and experimental detection/propagation code. |
+| [`scripts/`](scripts/README.md) | Data preparation, benchmarks, and completed pilot utilities. |
+| [`docs/`](docs/README.md) | Labeling guides and project plans. |
+| [`tests/`](tests/README.md) | Unit and browser smoke checks. |
+
+The private `labeling.pem` SSH key lives in `.secrets/` and is ignored by Git.
 
 ## Data labeling
 
@@ -29,7 +36,7 @@ See the [labeling guide](docs/LABELING_GUIDE.md) for setup and controls, and
 the [labeling plan](docs/LABELING_PLAN.md) for the 2–4 Hz dataset scope.
 
 ```sh
-arch -x86_64 python3 -m labeling.app review-shots --dataset datasets/ice_v1
+arch -x86_64 python3 -m labeling.app review-shots --dataset data/datasets/ice_v1
 ```
 
 Then open http://127.0.0.1:8765. The prepared dataset contains 1,721 reviewed
@@ -38,7 +45,7 @@ The two newer broadcasts were sampled every 20 seconds and retain source timesta
 
 ## Center-ice labeling experiment
 
-`python3 -m vision.detect_center frames/601.png` produces `frames/601_v3.png`,
+`python3 -m vision.detect_center data/frames/601.png` produces `data/frames/601_v3.png`,
 `601_v3.labels.json` (four observed neutral-zone dots, in the collector's format),
 and `601_v3.report.json` (line segments, inferred center, and local homography).
 On the current Mac installation, use `arch -x86_64 python3` because the installed

@@ -2,11 +2,12 @@
 'use strict';
 const $ = id => document.getElementById(id);
 let manifest, record, entry, index = 0, image = new Image();
-let dirty = false, saving = false, savePromise = null, loading = false, editVersion = 0, timer, undoStack = [], selection = null;
+let busy = 0, dirty = false, saving = false, savePromise = null, loading = false, editVersion = 0, timer, undoStack = [], selection = null;
 let zoom = 1, offset = [0, 0], draft = [], drag = null;
 const canvas = $('canvas'), ctx = canvas.getContext('2d');
 const clone = value => JSON.parse(JSON.stringify(value));
-const uid = () => crypto.randomUUID();
+// randomUUID needs HTTPS/localhost; getRandomValues also works over plain HTTP (the EC2 deployment).
+const uid = () => Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, '0')).join('');
 const message = text => { $('errors').textContent = text; };
 const PHASES = {
   shots: { key: 'shot', title: 'Choose usable or unusable', instruction: 'First pass: make one decision. A frame is usable when it shows enough rink context to recover positions for at least some visible on-ice people. Either choice saves and advances.', done: 'Done →', tools: ['inspect'] },
@@ -105,11 +106,20 @@ async function save() {
   })();
   return savePromise;
 }
+// Frame changes take a network round trip; block drawing so edits can't land on the outgoing frame.
+async function switching(fn) {
+  busy++; canvas.style.opacity = .5;
+  try { return await fn(); } finally { if (!--busy) canvas.style.opacity = ''; }
+}
 function modeKey() { return PHASES[$('mode').value].key; }
+function excludedFromPlayerReview(entry) {
+  return $('mode').value === 'players' && (manifest.selections?.player_skip_v1 || []).includes(entry.id);
+}
 function filtered() {
   const query = $('search').value.toLowerCase();
   const pilot = new Set(manifest.selections?.geometry_pilot_v1 || []);
   return manifest.images.map((e, i) => ({ e, i })).filter(({ e }) => e.relative_path.toLowerCase().includes(query)
+    && !excludedFromPlayerReview(e)
     && (!$('geometryPilot').checked || pilot.has(e.id))
     && (!$('unreviewed').checked || manifest.summaries[e.id][modeKey()] !== 'reviewed'));
 }
@@ -119,11 +129,12 @@ function frameMenu() {
   }));
   $('frame').value = String(index);
   const pilot = new Set(manifest.selections?.geometry_pilot_v1 || []);
-  const scope = $('geometryPilot').checked ? manifest.images.filter(e => pilot.has(e.id)) : manifest.images;
+  const scope = ($('geometryPilot').checked ? manifest.images.filter(e => pilot.has(e.id)) : manifest.images)
+    .filter(e => !excludedFromPlayerReview(e));
   const completed = scope.filter(e => manifest.summaries[e.id][modeKey()] === 'reviewed').length;
   $('progress').textContent = `${completed} / ${scope.length} complete in this phase`;
 }
-async function load(i) {
+async function load(i) { return switching(async () => {
   if (loading) return;
   await save();
   loading = true;
@@ -136,7 +147,7 @@ async function load(i) {
     selection = null; draft = []; undoStack = []; fitView(); render(); frameMenu(); $('saveState').textContent = 'Saved';
     await autoFit();
   } finally { loading = false; }
-}
+}); }
 // Called while loading is locked so edits cannot race with the fit response.
 async function autoFit() {
   if ($('mode').value !== 'calibration' || !record || record.review.geometry === 'reviewed') return;
@@ -161,12 +172,12 @@ async function autoFit() {
     $('calibration').textContent = `Overlay unavailable: ${e.message}`;
   }
 }
-async function navigate(delta) {
+async function navigate(delta) { return switching(async () => {
   await save();
   const items = filtered().map(x => x.i);
   const target = delta > 0 ? items.find(i => i > index) : items.slice().reverse().find(i => i < index);
   if (target !== undefined) await load(target);
-}
+}); }
 function selected() {
   return selection && record[selection.kind][selection.index];
 }
@@ -250,7 +261,7 @@ function drawPlayerRink() {
     if (selection?.kind === 'players' && selection.index === i) { c.strokeStyle = '#111'; c.strokeRect(pos[0] - 7, pos[1] - 7, 14, 14); }
     c.font = '11px system-ui'; c.fillText(String(i + 1), pos[0] > 305 ? pos[0] - 17 : pos[0] + 6, pos[1] < 14 ? pos[1] + 13 : pos[1] - 3); count++;
   });
-  $('playerRinkStatus').textContent = `${count}/${record.players.length} positions · ${estimated} estimated contacts · ${boxEstimates} box-bottom estimates · ${offMap} off-map (shown at edge)${invalid ? ` · ${invalid} cannot be projected` : ''}. Teal: team_a; orange: team_b; purple: officials. Hollow: estimated; diamond: box estimate or off-map. Box estimates are preview-only; no contact labels are changed.`;
+  $('playerRinkStatus').textContent = `${count}/${record.players.length} positions · ${estimated} estimated contacts · ${boxEstimates} box-bottom estimates · ${offMap} off-map (shown at edge)${invalid ? ` · ${invalid} cannot be projected` : ''}. Teal: team_a; orange: team_b; purple: officials. Hollow: estimated; diamond: box estimate or off-map. With an accepted fit, box-bottom estimates are exported without changing contact labels.`;
 }
 function resize() { const box = $('viewport').getBoundingClientRect(); canvas.width = Math.floor(box.width); canvas.height = Math.floor(box.height); draw(); }
 function fitView() { resize(); zoom = Math.min(canvas.width / image.width, canvas.height / image.height); offset = [(canvas.width - image.width * zoom) / 2, (canvas.height - image.height * zoom) / 2]; draw(); }
@@ -316,12 +327,12 @@ function finish() {
 function startNewAnnotation() {
   selection = null; draft = []; $('visibility').value = 'visible'; $('heldOut').checked = false;
   if ($('mode').value === 'geometry') { $('landmark').value = ''; $('featureType').value = 'landmark'; setTool('point'); }
-  else setTool('box');
+  else { $('contactVisibility').value = 'both'; setTool('box'); }
 }
 canvas.onpointerdown = e => {
-  if (!record || loading) return; const p = imagePoint(e), tool = $('tool').value;
+  if (!record || loading || busy) { if (busy) message('Loading the next frame…'); return; } const p = imagePoint(e), tool = $('tool').value;
   if (tool === 'inspect') { drag = { tool, client: [e.clientX, e.clientY], offset: [...offset] }; canvas.setPointerCapture(e.pointerId); return; }
-  if (!inside(p)) return;
+  if (!inside(p) && tool !== 'contact') return;
   try {
     if (tool === 'box') { drag = { tool, start: p, current: p }; canvas.setPointerCapture(e.pointerId); }
     else if (tool === 'point') addFeature([p]);
@@ -336,11 +347,12 @@ canvas.onpointerdown = e => {
     }
   } catch (err) { message(err.message); }
 };
-canvas.onpointermove = e => { if (!drag) return; if (drag.tool === 'inspect') { offset = [drag.offset[0] + e.clientX - drag.client[0], drag.offset[1] + e.clientY - drag.client[1]]; } else { const p = imagePoint(e); drag.current = [Math.max(0, Math.min(entry.width - 1, p[0])), Math.max(0, Math.min(entry.height - 1, p[1]))]; } draw(); };
+canvas.onpointermove = e => { if (!drag) return; if (drag.tool === 'inspect') { offset = [drag.offset[0] + e.clientX - drag.client[0], drag.offset[1] + e.clientY - drag.client[1]]; } else { drag.current = imagePoint(e); } draw(); };
 canvas.onpointerup = () => {
-  if (drag?.tool === 'box') {
+  if (drag?.tool === 'box' && (loading || busy)) message('Box discarded: the frame changed while drawing.');
+  else if (drag?.tool === 'box') {
     const a = drag.start, b = drag.current; if (Math.abs(a[0] - b[0]) > 3 && Math.abs(a[1] - b[1]) > 3) mutate(() => {
-      record.players.push({ id: uid(), role: $('role').value, team: $('role').value === 'official' ? 'official' : $('team').value, bbox: [Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[0], b[0]), Math.max(a[1], b[1])], ice_point: null, contact_visibility: $('contactVisibility').value, occluded: $('occluded').checked, truncated: $('truncated').checked, provenance: 'manual' });
+      record.players.push({ id: uid(), role: $('role').value, team: $('role').value === 'official' ? 'official' : $('team').value, bbox: [Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[0], b[0]), Math.max(a[1], b[1])], ice_point: null, contact_visibility: 'both', occluded: $('occluded').checked, truncated: $('truncated').checked, provenance: 'manual' });
       selection = { kind: 'players', index: record.players.length - 1 }; record.review.players = 'in_progress';
     });
   } drag = null; draw();
@@ -377,7 +389,7 @@ async function init() {
     if (button.disabled) return;
     if (loading) { feedback.textContent = 'Please wait for the frame or rink fit to finish loading, then try again.'; return; }
     button.disabled = true; feedback.textContent = 'Saving review…';
-    try {
+    await switching(async () => { try {
       const phase = $('mode').value;
       await save();
       if (phase === 'calibration' && record.shot.geometry_status === 'accepted') {
@@ -388,8 +400,8 @@ async function init() {
       mutate(() => record.review[PHASES[phase].key] = 'reviewed'); await save(); frameMenu();
       const next = filtered().find(({ i }) => i > index);
       if (next) await load(next.i); else feedback.textContent = 'Review saved. No later frames match this filter. You can choose another frame or phase above.';
-    } catch (e) { feedback.textContent = e.message; }
-    finally { button.disabled = false; }
+    } catch (e) { feedback.textContent = e.message; } });
+    button.disabled = false;
   };
   $('save').onclick = run(save); $('finish').onclick = run(finish);
   $('undo').onclick = () => { if (undoStack.length) { const current = record; record = undoStack.pop(); record.revision = current.revision; selection = null; record.calibration = current.calibration; if (JSON.stringify(record.features) !== JSON.stringify(current.features) || record.orientation !== current.orientation) { record.calibration = null; if (record.shot.geometry_status === 'accepted') record.shot.geometry_status = 'unreviewed'; record.review.geometry = 'in_progress'; } changed(); render(); } };
@@ -411,12 +423,12 @@ async function init() {
   $('fitGeometry').onclick = run(async () => { await serverAction('/api/fit'); message('Fit is a proposal. Inspect the overlay and any available check-point errors before accepting.'); });
   $('proposeCenter').onclick = run(() => serverAction('/api/propose', { method: 'center' }));
   $('proposeGeneral').onclick = run(() => serverAction('/api/propose', { method: 'general' }));
-  async function markUsability(value) {
+  async function markUsability(value) { return switching(async () => {
     await save(); mutate(() => { record.shot.position_usability = value; record.review.shot = 'reviewed'; record.reason = ''; });
     await save(); frameMenu();
     const next = filtered().find(({ i }) => i > index);
     if (next) await load(next.i); else message('Saved. No later frames match this filter.');
-  }
+  }); }
   $('markUsable').onclick = run(() => markUsability('usable'));
   $('markUnusable').onclick = run(() => markUsability('unusable'));
   window.addEventListener('beforeunload', e => { if (dirty || saving) { e.preventDefault(); e.returnValue = ''; } });

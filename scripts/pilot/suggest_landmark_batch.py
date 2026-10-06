@@ -18,7 +18,7 @@ import numpy as np
 
 
 ROOT = Path(__file__).resolve().parents[2]
-DATASET = ROOT / "datasets" / "ice_v1"
+DATASET = ROOT / 'data' / 'datasets' / "ice_v1"
 
 def read(path: Path):
     return json.loads(path.read_text())

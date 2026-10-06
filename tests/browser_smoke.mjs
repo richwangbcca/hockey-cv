@@ -66,9 +66,12 @@ try {
   assert.equal(await evaluate('record.review.landmarks'), 'reviewed');
   await set('geometryStatus', 'accepted'); await click('completeNext'); await wait('!dirty && !saving && record.review.geometry === "reviewed"');
   await set('mode', 'players'); await set('tool', 'box');
-  const a = await point([1180, 650]), b = await point([1340, 850]);
+  const a = await point([1180, 650]), b = await point([2050, 1150]);
   await mouse('mousePressed', a); await mouse('mouseMoved', b); await mouse('mouseReleased', b);
   assert.equal(await evaluate('record.players.length'), 1);
+  assert.equal(await evaluate('record.players[0].bbox[2] > entry.width && record.players[0].bbox[3] > entry.height'), true);
+  assert.equal(await evaluate('record.players[0].contact_visibility'), 'both');
+  assert.equal(await evaluate(`document.getElementById('contactVisibility').value`), 'both');
   await set('contactVisibility', 'both'); await set('tool', 'contact');
   const contact = await point([1280, 830]); await mouse('mousePressed', contact); await mouse('mouseReleased', contact);
   assert.ok(await evaluate('record.players[0].ice_point !== null'));
